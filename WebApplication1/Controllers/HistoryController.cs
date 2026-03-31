@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Mvc;
+using Npgsql;
 using System.Data;
 
 namespace WebApplication1;
@@ -15,22 +15,22 @@ public class HistoryController : Controller
     {
         // 1) 主表
         var dtH = _db.Query(
-            @"SELECT Id, InputSentence, CorrectedSentence, TipZh, MeaningZh, CreatedAt
-              FROM LearningHistory
-              WHERE UserId = @uid
-              ORDER BY CreatedAt DESC",
-            new SqlParameter("@uid", userId)
+            @"SELECT ""Id"", ""InputSentence"", ""CorrectedSentence"", ""TipZh"", ""MeaningZh"", ""CreatedAt""
+              FROM ""LearningHistory""
+              WHERE ""UserId"" = @uid
+              ORDER BY ""CreatedAt"" DESC",
+            new NpgsqlParameter("@uid", userId)
         );
 
         // 2) 明細 errors
         var dtE = _db.Query(
-            @"SELECT HistoryId, StartPos, EndPos, Original, Suggest, ReasonZh, RuleZh
-              FROM LearningHistoryErrors
-              WHERE HistoryId IN (
-                  SELECT Id FROM LearningHistory WHERE UserId = @uid
+            @"SELECT ""HistoryId"", ""StartPos"", ""EndPos"", ""Original"", ""Suggest"", ""ReasonZh"", ""RuleZh""
+              FROM ""LearningHistoryErrors""
+              WHERE ""HistoryId"" IN (
+                  SELECT ""Id"" FROM ""LearningHistory"" WHERE ""UserId"" = @uid
               )
-              ORDER BY HistoryId DESC, StartPos ASC",
-            new SqlParameter("@uid", userId)
+              ORDER BY ""HistoryId"" DESC, ""StartPos"" ASC",
+            new NpgsqlParameter("@uid", userId)
         );
 
         // 3) 組回 JSON
@@ -48,7 +48,7 @@ public class HistoryController : Controller
                 suggest = r["Suggest"]?.ToString(),
                 reason_zh = r["ReasonZh"]?.ToString(),
                 rule_zh = r["RuleZh"]?.ToString(),
-                category = "" // 你表裡沒存就留空，renderGrammarViz 也能跑
+                category = ""
             });
         }
 

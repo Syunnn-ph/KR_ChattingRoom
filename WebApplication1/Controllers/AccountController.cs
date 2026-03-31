@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Mvc;
+using Npgsql;
 
 namespace WebApplication1;
 
@@ -11,10 +11,9 @@ public class AccountController : Controller
     [HttpPost]
     public IActionResult Login(string name, string password)
     {
-        // 先查 user 存不存在 + 拿密碼
         var dt = _db.Query(
-            "SELECT Id, Password FROM UserID WHERE Name = @name",
-            new SqlParameter("@name", name)
+            @"SELECT ""Id"", ""Password"" FROM ""UserID"" WHERE ""Name"" = @name",
+            new NpgsqlParameter("@name", name)
         );
 
         if (dt.Rows.Count == 0)
@@ -28,27 +27,25 @@ public class AccountController : Controller
         return Json(new { ok = true, userId });
     }
 
-
     [HttpPost]
     public IActionResult Register(string name, string password)
     {
         try
         {
             _db.Execute(
-                "INSERT INTO UserID (Name, Password) VALUES (@name, @pwd)",
-                new SqlParameter("@name", name),
-                new SqlParameter("@pwd", password)
+                @"INSERT INTO ""UserID"" (""Name"", ""Password"") VALUES (@name, @pwd)",
+                new NpgsqlParameter("@name", name),
+                new NpgsqlParameter("@pwd", password)
             );
 
-            // 回傳新增後的 Id
             var dt = _db.Query(
-                "SELECT Id FROM UserID WHERE Name = @name",
-                new SqlParameter("@name", name)
+                @"SELECT ""Id"" FROM ""UserID"" WHERE ""Name"" = @name",
+                new NpgsqlParameter("@name", name)
             );
 
             return Json(new { ok = true, userId = (int)dt.Rows[0]["Id"] });
         }
-        catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+        catch (PostgresException ex) when (ex.SqlState == "23505") // 唯一鍵衝突
         {
             return Json(new { ok = false, msg = "帳號已存在" });
         }
