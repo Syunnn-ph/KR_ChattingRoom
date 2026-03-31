@@ -34,7 +34,8 @@ builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient<OpenAIService>();
 
-builder.Services.AddSingleton<DBHelper>();
+builder.Services.AddScoped<DBHelper>();
+//builder.Services.AddSingleton<DBHelper>();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
