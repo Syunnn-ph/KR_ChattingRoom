@@ -1,0 +1,201 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Chat Test";
+}
+
+<div id="cv">
+    <form action="/" method="post" style="display:flex; flex-direction:column; gap: 12px;  ">
+        <input id="user" placeholder="你的名字" class="input-user" autocomplete="off" />
+        <input id="password" placeholder="輸入密碼" class="input-user" autocomplete="off" type="password"/>
+        <button id="nameInput" type="button" style="height: 40px;">確定</button>
+    </form>
+
+    <p id="loginMsg" style=" color:white; font-size:24px; margin-top:20px"></p>
+    <button id="registerSubmit" style="display:none">確定新增帳號</button>
+    
+</div>
+
+
+<div class="titlebar">
+    <h2 class="title">韓語實戰聊天室!!</h2>
+    <div id="status" class="status"></div>
+    
+    <button id="logout">登出</button>
+
+    <!--漢堡按鈕-->
+    <button id="sidebarToggle"
+            class="hamburger"
+            type="button"
+            aria-label="開啟側邊面板"
+            aria-controls="sidebar"
+            aria-expanded="false">
+        ☰
+    </button>
+</div>
+
+<div class="layout">
+    <div class="main">
+        <div class="toolbar">
+            @* <input id="user" placeholder="你的名字" class="input-user" autocomplete="off" /> *@
+            <input id="message" placeholder="輸入訊息" class="input-message" autocomplete="off" />
+            <button id="sendBtn">送出</button>
+            <button id="analyzeBtn">分解</button>
+        </div>
+
+        <div id="chat" class="chat">
+            <div class="spacer"></div>
+        </div>
+    </div>
+
+    <aside id="sidebar" class="sidebar" aria-hidden="false">
+        @* 分解 *@
+        <div class="sidebarSection">
+            <div style="height:36vh; max-height: 36vh; overflow-y:scroll;">
+                <p id="jsonBox" style="max-width:15vw; overflow-x:hidden;"></p>
+                <p style="text-align:center; font-weight:bolder; font-size:20px">中→韓分解詞彙</p>
+                <div id="mapBox" style="margin-bottom:5px "></div>
+                <button id="showNote" style="font-size:14px; font-weight:bold">顯示句型提示</button>
+                <button id="showAns" style="font-size:14px; font-weight:bold">顯示正解</button>
+                <p id="note" style="font-size:16px; margin-top:10px;"></p>
+            </div>
+
+            <hr />
+
+            @* 修正 *@
+            <div style="height:32vh; max-height: 32vh;  overflow-y:scroll; padding-bottom: 20px">
+                <p style="text-align:center; font-weight:bolder; font-size:20px">韓語修正</p>
+                <p id="checkBox"></p>
+                <p style="font-weight:bold">原句：</p>
+
+                <div id="viz"></div>
+                <div style="margin-top:20px;">
+                    <p style="font-weight:bold">正解：</p>
+                    <div id="correctedViz" style="color:darkblue;"></div>
+                </div>
+
+                <div style="margin-top:20px;">
+                    <p style="font-weight:bold">母語者理解：</p>
+                    <p id="meaning" style="color:darkblue;"></p>
+                </div>
+                
+            </div>
+            <a href="/Error" id="mistakeLink">查看錯誤紀錄</a>
+        </div>
+    </aside>
+
+    <div id="backdrop" class="backdrop" hidden></div>
+</div>
+
+<div id="globalTooltip" class="globalTooltip" role="tooltip"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+<script src="~/js/grammar-viz.js" asp-append-version="true"></script>
+<script src="~/js/signalr-setup.js" asp-append-version="true"></script>
+<script src="~/js/actions.js" asp-append-version="true"></script>
+<script src="~/js/DB.js" asp-append-version="true"></script>
+
+@* 響應式 *@
+<script>
+    document.addEventListener("DOMContentLoaded", async () => {
+    window.UserId = sessionStorage.getItem("UserId");
+    window.UserName = sessionStorage.getItem("UserName");
+    console.log(window.UserId)
+    const cv = document.getElementById("cv");
+
+    if (window.UserId && window.UserId.trim() !== "") {
+        cv.style.display = "none";
+    }
+    });
+
+    (function () {
+      const toggleBtn = document.getElementById("sidebarToggle");
+      const sidebar = document.getElementById("sidebar");
+      const backdrop = document.getElementById("backdrop");
+
+      function setOpen(isOpen) {
+        sidebar.classList.toggle("open", isOpen);
+        backdrop.hidden = !isOpen;
+        toggleBtn.setAttribute("aria-expanded", String(isOpen));
+        sidebar.setAttribute("aria-hidden", String(!isOpen));
+        document.body.classList.toggle("noScroll", isOpen);
+      }
+
+      toggleBtn?.addEventListener("click", () => {
+        const isOpen = sidebar.classList.contains("open");
+        setOpen(!isOpen);
+      });
+
+      backdrop?.addEventListener("click", () => setOpen(false));
+
+      // ESC 關閉
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") setOpen(false);
+      });
+    })();
+
+        (() => {
+      const tipEl = document.getElementById('globalTooltip');
+      if (!tipEl) return;
+
+      let active = null;
+
+      function showTip(target) {
+        const text = target.getAttribute('data-tip');
+        if (!text) return;
+        active = target;
+        tipEl.textContent = text;
+        tipEl.style.display = 'block';
+      }
+
+      function hideTip() {
+        active = null;
+        tipEl.style.display = 'none';
+      }
+
+      function moveTip(e) {
+        if (!active) return;
+
+        // 先給一個滑鼠旁的預設位置
+        const gap = 12;
+        let x = e.clientX + gap;
+        let y = e.clientY + gap;
+
+        // 顯示後才能量尺寸
+        const rect = tipEl.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // 超出右邊就往左擺
+        if (x + rect.width > vw - 8) x = e.clientX - rect.width - gap;
+        // 超出下方就往上擺
+        if (y + rect.height > vh - 8) y = e.clientY - rect.height - gap;
+
+        // 再保底不要小於邊界
+        x = Math.max(8, Math.min(x, vw - rect.width - 8));
+        y = Math.max(8, Math.min(y, vh - rect.height - 8));
+
+        tipEl.style.left = `${x}px`;
+        tipEl.style.top = `${y}px`;
+      }
+
+      // 事件委派：支援你動態生成的 .err
+      document.addEventListener('mouseover', (e) => {
+        const t = e.target.closest?.('.err[data-tip]');
+        if (!t) return;
+        showTip(t);
+      });
+
+      document.addEventListener('mouseout', (e) => {
+        if (!active) return;
+        // 移出 active 元素就收
+        if (e.target === active || e.target.closest?.('.err[data-tip]') === active) {
+          hideTip();
+        }
+      });
+
+      document.addEventListener('mousemove', moveTip);
+      window.addEventListener('scroll', () => tipEl.style.display === 'block' && (tipEl.style.display = 'none'));
+    })();
+
+</script>

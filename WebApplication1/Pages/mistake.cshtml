@@ -1,0 +1,50 @@
+﻿@page
+@model WebApplication1.Pages.mistakeModel
+@{
+}
+
+<div class="titlebar">
+    <h2 class="title">韓語實戰聊天室!!</h2>
+    <div id="status" class="status"></div>
+</div>
+
+<div id="main" style="width:100vw; display:flex; justify-items:">
+    <div class="mistakeBox" style="width:20vw; background-color:lightgray">
+        <div>
+            <p style="text-align:center; font-weight:bolder; font-size:20px">韓語修正</p>
+            <p id="checkBox"></p>
+            <p style="font-weight:bold">原句：</p>
+
+            <div id="viz"></div>
+            <div style="margin-top:20px;">
+                <p style="font-weight:bold">正解：</p>
+                <div id="correctedViz" style="color:darkblue;"></div>
+            </div>
+
+            <div style="margin-top:20px;">
+                <p style="font-weight:bold">母語者理解：</p>
+                <p id="meaning" style="color:darkblue;"></p>
+            </div>
+
+        </div>
+    </div>
+    <div class="mistakeBox" style="width:20vw; background-color:lightgray">
+        <div>
+            <p style="text-align:center; font-weight:bolder; font-size:20px">韓語修正</p>
+            <p id="checkBox"></p>
+            <p style="font-weight:bold">原句：</p>
+
+            <div id="viz"></div>
+            <div style="margin-top:20px;">
+                <p style="font-weight:bold">正解：</p>
+                <div id="correctedViz" style="color:darkblue;"></div>
+            </div>
+
+            <div style="margin-top:20px;">
+                <p style="font-weight:bold">母語者理解：</p>
+                <p id="meaning" style="color:darkblue;"></p>
+            </div>
+
+        </div>
+    </div>
+</div>

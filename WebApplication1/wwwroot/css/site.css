@@ -1,0 +1,362 @@
+﻿html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+#cv {
+    background-color: dimgrey;
+    opacity: 92%;
+    width: 100vw;
+    height: 100vh;
+    z-index: 3;
+    position: fixed;
+    display: flex;
+    flex-flow:column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* =========================
+   對話泡泡（修正版）
+   ========================= */
+
+.chat {
+    height: 70vh;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column; /* 新訊息往下 */
+}
+
+/* 每一則訊息一列 */
+.chatLine {
+    display: flex;
+    margin: 6px 0;
+    width: 100%;
+}
+
+    /* ===== 自己的訊息：靠右 ===== */
+    .chatLine.me {
+        justify-content: flex-end;
+    }
+
+    /* ===== 對方的訊息：靠左 ===== */
+    .chatLine.other {
+        justify-content: flex-start;
+    }
+
+/* 泡泡本體 */
+.bubble {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    word-break: break-word;
+    line-height: 1.45;
+    font-size: 15px;
+}
+
+/* ===== 自己（右邊，LINE 綠） ===== */
+.chatLine.me .bubble {
+    background: #95ec69;
+    border-bottom-right-radius: 4px;
+    margin-left: auto; /* 關鍵：確保真的推到右邊 */
+}
+
+/* ===== 對方（左邊，白色） ===== */
+.chatLine.other .bubble {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-bottom-left-radius: 4px;
+    margin-right: auto; /* 關鍵：確保真的在左邊 */
+}
+
+/* （可選）名字或系統訊息用 */
+.chatLine.system .bubble {
+    background: #eee;
+    color: #555;
+    font-size: 13px;
+    margin: 0 auto;
+    border-radius: 12px;
+}
+
+
+#viz {
+    line-height: 2;
+    font-size: 18px;
+}
+
+.err {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-decoration-style: wavy;
+    cursor: help;
+    padding: 0 2px;
+    border-radius: 4px;
+}
+
+    .err.particle {
+        background: rgba(255, 200, 0, 0.20);
+    }
+
+    .err.spelling {
+        background: rgba(255, 0, 0, 0.15);
+    }
+
+    .err.word {
+        background: rgba(0, 160, 255, 0.12);
+    }
+
+    /* tooltip */
+    /*.err[data-tip] {
+        position: relative;
+    }
+
+        .err[data-tip]:hover::after {
+            content: attr(data-tip);
+            position: fixed;*/ /* ⭐關鍵 */
+            /*z-index: 9999;*/
+            /* 預設位置 */
+            /*left: 50%;
+            top: 50%;
+            transform: translate(-50%, 12px);
+            white-space: pre-wrap;
+            max-width: 15vw;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: #111;
+            color: #fff;
+            font-size: 13px;
+            box-shadow: 0 6px 18px rgba(0,0,0,.25);
+        }*/
+
+#jsonBox::-webkit-scrollbar {
+    display: none;
+}
+
+.globalTooltip {
+    position: fixed; /* 關鍵：不受父層 overflow 影響 */
+    z-index: 9999;
+    display: none;
+    white-space: pre-wrap;
+    width: max-content;
+    max-width: min(320px, 90vw);
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: #111;
+    color: #fff;
+    font-size: 13px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.25);
+    pointer-events: none; /* 避免 tooltip 擋到 hover */
+}
+
+
+
+/* ===== 基本排版 ===== */
+.titlebar {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    padding: 20px 15px 10px 50px;
+    position: relative;
+}
+
+    .titlebar .title {
+        margin: 0;
+    }
+
+.status {
+    margin-bottom: 2px;
+    color: forestgreen;
+    font-weight: bold;
+}
+
+/* 主區塊：桌機兩欄 */
+.layout {
+    display: flex;
+    gap: 12px;
+    padding: 0 12px 12px 12px;
+}
+
+.main {
+    flex: 1;
+    min-width: 0;
+    background: lightgray;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.toolbar {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 10px 0;
+}
+
+.input-user {
+    width: 80%;
+    font-size: 24px;
+}
+
+.input-message {
+    flex: 1;
+    min-width: 0;
+}
+
+.sidebar {
+    width: 340px;
+    max-width: 340px;
+    height: 85vh;
+    background: lightgray;
+    border: 1px solid darkgray;
+    border-radius: 10px;
+    padding: 10px;
+    overflow: hidden;
+}
+
+
+/* 漢堡：桌機先隱藏 */
+.hamburger {
+    display: none;
+    margin-left: auto;
+    border: 1px solid #999;
+    background: white;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+/* 遮罩（只給手機抽屜用） */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.35);
+    z-index: 998;
+}
+
+.noScroll {
+    overflow: hidden;
+}
+
+
+
+/*錯誤頁面*/
+
+#mistakeLink {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    text-decoration: none;
+    color: black;
+    font-size: 18px;
+    border: double 5px darkgrey;
+}
+
+    #mistakeLink:hover {
+        color: darkred;
+        font-weight: bold;
+    }
+
+#mistakeMain {
+    width: 100vw;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 10px 1vw 0 2vw;
+}
+
+.mistakeBox {
+    height: 30vh;
+    background-color: lightgray;
+    flex: 0 0 20vw;
+    margin: 2vh 2vw;
+    padding: 10px;
+    overflow-y: scroll;
+}
+
+
+/* ===== 手機版：sidebar 變抽屜 ===== */
+@media (max-width: 900px) {
+    .titlebar {
+        padding: 16px 12px 8px 12px;
+    }
+
+    .layout {
+        display: block; /* 主區塊滿版 */
+        padding: 0 12px 12px 12px;
+    }
+
+    .hamburger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100dvh;
+        width: min(86vw, 380px);
+        max-width: none;
+        border-radius: 0;
+        z-index: 999;
+        transform: translateX(100%);
+        transition: transform .2s ease;
+    }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+    .input-user {
+        width: 80%;
+    }
+
+    
+    .err[data-tip]:hover::after {
+        right: auto;
+        left: 0;
+        max-width: 90vw;
+    }
+
+    #mistakeMain {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 10px 12px; /* 你想要的左右內距 */
+        box-sizing: border-box;
+    }
+
+    .mistakeBox {
+        width: 100%;
+        max-width: none;
+        min-height:30vh;
+        max-height:30vh;
+        background-color: lightgray;
+        margin: 12px 0; /* ⭐只留上下間距，不要左右 margin */
+        padding: 10px;
+        overflow-y: auto;
+        box-sizing: border-box;
+        font-size:20px;
+    }
+}

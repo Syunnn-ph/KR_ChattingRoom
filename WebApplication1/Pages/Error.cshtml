@@ -1,0 +1,173 @@
+﻿@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "mistake";
+}
+
+<div class="titlebar">
+    <h2 class="title">錯誤文法紀錄</h2>
+    <div id="status" class="status"></div>
+    <a href="/Index">回到聊天室</a>
+</div>
+
+<div id="mistakeMain">
+    <div class="mistakeBox">
+        <div>
+            <p style="text-align:center; font-weight:bolder; font-size:20px">錯誤時間</p>
+            <p id="checkBox"></p>
+            <p style="font-weight:bold">原句：</p>
+
+            <div id="viz"></div>
+            <div style="margin-top:20px;">
+                <p style="font-weight:bold">正解：</p>
+                <div id="correctedViz" style="color:darkblue;"></div>
+            </div>
+
+            <div style="margin-top:20px;">
+                <p style="font-weight:bold">母語者理解：</p>
+                <p id="meaning" style="color:darkblue;"></p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div id="globalTooltip" class="globalTooltip" role="tooltip"></div>
+
+
+<script src="~/js/grammar-viz.js" asp-append-version="true"></script>
+<script src="~/js/history-render.js" asp-append-version="true"></script>
+
+<script>
+    window.UserId = sessionStorage.getItem("UserId");
+    window.UserName = sessionStorage.getItem("UserName");
+
+    document.addEventListener("DOMContentLoaded", async () => {
+
+      const main = document.getElementById("mistakeMain");
+      if (!main) return;
+
+      const userId = window.UserId;
+      if (userId == null) {
+        main.innerHTML = "<p>未登入（UserId 不存在）</p>";
+        return;
+      }
+
+      const res = await fetch(`/History/List?userId=${encodeURIComponent(userId)}`);
+      const json = await res.json();
+      if (!json.ok) {
+        main.innerHTML = "<p>讀取失敗</p>";
+        return;
+      }
+
+      main.innerHTML = "";
+      for (const item of json.data) {
+        const box = createMistakeBox(item);
+        main.appendChild(box);
+
+        // 用你現有的 renderGrammarViz 畫 hover
+        const viz = box.querySelector(".viz");
+        renderGrammarViz(item.input || "", item.errors || [], viz);
+
+        // corrected / meaning / tip
+        box.querySelector(".correctedViz").textContent = item.corrected || "";
+        box.querySelector(".meaning").textContent = item.meaning_zh || "";
+        box.querySelector(".tip").textContent = item.one_sentence_tip_zh || "";
+        box.querySelector(".time").textContent = item.createdAt || "";
+      }
+    });
+
+    function createMistakeBox(item) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "mistakeBox";
+      wrapper.innerHTML = `
+        <div>
+          <p class="time" style="text-align:center; font-weight:bolder; font-size:20px"></p>
+
+          <p style="font-weight:bold">原句：</p>
+          <div class="viz"></div>
+
+          <div style="margin-top:16px;">
+            <p style="font-weight:bold">正解：</p>
+            <div class="correctedViz" style="color:darkblue;"></div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <p style="font-weight:bold">錯誤原因：</p>
+            <p class="tip" style="color:darkblue;"></p>
+          </div>
+
+          <div style="margin-top:16px;">
+            <p style="font-weight:bold">母語者理解：</p>
+            <p class="meaning" style="color:darkblue;"></p>
+          </div>
+        </div>
+      `;
+      return wrapper;
+    }
+
+        (() => {
+      const tipEl = document.getElementById('globalTooltip');
+      if (!tipEl) return;
+
+      let active = null;
+
+      function showTip(target) {
+        const text = target.getAttribute('data-tip');
+        if (!text) return;
+        active = target;
+        tipEl.textContent = text;
+        tipEl.style.display = 'block';
+      }
+
+      function hideTip() {
+        active = null;
+        tipEl.style.display = 'none';
+      }
+
+      function moveTip(e) {
+        if (!active) return;
+
+        // 先給一個滑鼠旁的預設位置
+        const gap = 12;
+        let x = e.clientX + gap;
+        let y = e.clientY + gap;
+
+        // 顯示後才能量尺寸
+        const rect = tipEl.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // 超出右邊就往左擺
+        if (x + rect.width > vw - 8) x = e.clientX - rect.width - gap;
+        // 超出下方就往上擺
+        if (y + rect.height > vh - 8) y = e.clientY - rect.height - gap;
+
+        // 再保底不要小於邊界
+        x = Math.max(8, Math.min(x, vw - rect.width - 8));
+        y = Math.max(8, Math.min(y, vh - rect.height - 8));
+
+        tipEl.style.left = `${x}px`;
+        tipEl.style.top = `${y}px`;
+      }
+
+      // 事件委派：支援你動態生成的 .err
+      document.addEventListener('mouseover', (e) => {
+        const t = e.target.closest?.('.err[data-tip]');
+        if (!t) return;
+        showTip(t);
+      });
+
+      document.addEventListener('mouseout', (e) => {
+        if (!active) return;
+        // 移出 active 元素就收
+        if (e.target === active || e.target.closest?.('.err[data-tip]') === active) {
+          hideTip();
+        }
+      });
+
+      document.addEventListener('mousemove', moveTip);
+      window.addEventListener('scroll', () => tipEl.style.display === 'block' && (tipEl.style.display = 'none'));
+    })();
+
+</script>
