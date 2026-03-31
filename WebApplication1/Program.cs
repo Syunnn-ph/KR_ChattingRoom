@@ -61,5 +61,6 @@ app.MapControllerRoute(                 // ✅ 一定要有（你現在缺的通
 );
 
 app.MapHub<ChatHub>("/chat");
+app.MapGet("/healthz", () => Results.Ok("healthy"));
 
 app.Run();
